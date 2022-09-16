@@ -104,10 +104,10 @@ int main(int argc, char *argv[]) {
 
 	printf("broadcast matrix");
 
-	linked_list * potential_positions;
 	int * pot_positions_array;
 	int scatter_rounds;
 	if (rank == root) {
+		linked_list * potential_positions;
 		int is_first = 1;
 		/* collect potential starting positions */
 		for (int i = 0; i < row; i++) {
@@ -155,7 +155,6 @@ int main(int argc, char *argv[]) {
 		MPI_Scatter(&pot_positions_array[i * 2], 2, MPI_INT, &positions[j], 2, MPI_INT, root, MPI_COMM_WORLD);
 		j++;
 	}
-	free(pot_positions_array);
 
 	printf("scattered starting positions");
 
@@ -188,6 +187,7 @@ int main(int argc, char *argv[]) {
 	printf("gathered results");
 
 	if (rank == root) {
+		free(pot_positions_array);
 		linked_list * printed = create_list(-1, -1);
 
 		printf("*** RESULTS ***\n\n");
