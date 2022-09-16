@@ -6,6 +6,10 @@
 linked_list *create_list(int x, int y)
 {
 	linked_list *head = malloc(sizeof(linked_list));
+	if (!head) {
+		perror("malloc failed in create_list");
+		exit(EXIT_FAILURE);
+	}
 	head->x = x;
 	head->y = y;
 	head->next = NULL;
@@ -68,6 +72,10 @@ int *get_top_left_list(linked_list * head)
 		curr = curr->next;
 	}
 	int *result = malloc(sizeof(int) * 2);
+	if (!result) {
+		perror("failed malloc in get_top_left_list");
+		exit(EXIT_FAILURE);
+	}
 	result[0] = x;
 	result[1] = y;
 

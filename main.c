@@ -203,6 +203,10 @@ int main(int argc, char *argv[])
 
 		pot_positions_array =
 		    malloc(sizeof(int) * scatter_rounds * size * 2);
+		if (!pot_positions_array) {
+			perror("malloc failed to allocate pot_positions_array");
+			exit(EXIT_FAILURE);
+		}
 		linked_list *curr = potential_positions;
 		/*
 		 * prepare array
