@@ -28,7 +28,7 @@ void generate_matrix(int * matrix, int row, int col) {
 void print_matrix(int * const matrix, int row, int col) {
 	for (int i = 0; i < row; i++) {
 		for (int j = 0; j < col; j++) {
-			printf("%d ", matrix[i + (row * j)]);
+			printf("%c ", matrix[i + (row * j)] ? 'O' : '.');
 		}
 		putchar('\n');
 	}
@@ -42,36 +42,36 @@ linked_list * bfs_explore(int x, int y, linked_list * explored,
 
     add_to_list(explored, x, y);
 	/* TOP LEFT */
-	if (x > 0 && y > 0 && (matrix[(x - 1) + (row * (y - 1))] == 1)) {
+	if (x > 0 && y > 0 && (matrix[(y - 1) + (row * (x - 1))])) {
 		explored = bfs_explore(x - 1, y - 1, explored, matrix, row, col);
 	}
 	/* TOP CENTRE */
-	if (y > 0 && (matrix[x + (row * (y - 1))])) {
+	if (y > 0 && (matrix[(y - 1) + (row * (x))])) {
 		explored = bfs_explore(x, y - 1, explored, matrix, row, col);
 	}
 	/* TOP RIGHT */
-	if (x < col && y > 0 && (matrix[(x + 1) + (row * (y - 1))])) {
+	if (x < (col - 1) && y > 0 && (matrix[(y - 1) + (row * (x + 1))])) {
 		explored = bfs_explore(x + 1, y - 1, explored, matrix, row, col);
 	}
 	/* LEFT CENTRE */
-	if (x > 0 && (matrix[(x - 1) + (row * y)] == 1)) {
-		explored = bfs_explore(x - 1, y - 1, explored, matrix, row, col);
+	if (x > 0 && (matrix[y + (row * (x - 1))])) {
+		explored = bfs_explore(x - 1, y, explored, matrix, row, col);
 	}
 	/* RIGHT CENTRE */
-	if (x < col && (matrix[(x + 1) + (row * y)] == 1)) {
-		explored = bfs_explore(x - 1, y - 1, explored, matrix, row, col);
+	if (x < (col - 1) && (matrix[y + (row * (x + 1))])) {
+		explored = bfs_explore(x + 1, y, explored, matrix, row, col);
 	}
 	/* BOTTOM LEFT */
-	if (x > 0 && y < row && (matrix[(x - 1) + (row * (y + 1))] == 1)) {
-		explored = bfs_explore(x - 1, y - 1, explored, matrix, row, col);
+	if (x > 0 && y < (row - 1) && (matrix[(y + 1) + (row * (x - 1))])) {
+		explored = bfs_explore(x - 1, y + 1, explored, matrix, row, col);
 	}
 	/* BOTTOM CENTRE */
-	if (y < row && (matrix[x + (row * (y + 1))] == 1)) {
-		explored = bfs_explore(x - 1, y - 1, explored, matrix, row, col);
+	if (y < (row - 1) && (matrix[(y + 1) + (row * x)])) {
+		explored = bfs_explore(x, y + 1, explored, matrix, row, col);
 	}
 	/* BOTTOM RIGHT */
-	if (x < col && y < row && (matrix[(x + 1) + (row * (y + 1))] == 1)) {
-		explored = bfs_explore(x - 1, y - 1, explored, matrix, row, col);
+	if (x < (col-1) && y < (row - 1) && (matrix[(y + 1) + (row * (x + 1))])) {
+		explored = bfs_explore(x + 1, y + 1, explored, matrix, row, col);
 	}
 
 	return explored;
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Get_processor_name(processor_name, &namelen);
 
-	int row = 5;
+	int row = 10;
 	int col = 10;
 	int * matrix = allocate_matrix(row, col);
 
@@ -113,10 +113,10 @@ int main(int argc, char *argv[]) {
 			for (int j = 0; j < col; j++) {
 				if (matrix[i + (row * j)] == 1 && last_cell != 1) {
 					if (is_first) {
-						potential_positions = create_list(i, j);
+						potential_positions = create_list(j, i);
 						is_first = 0;
 					} else {
-						add_to_list(potential_positions, i, j);
+						add_to_list(potential_positions, j, i);
 					}
 				}
 				last_cell = matrix[i + (row * j)];
@@ -154,6 +154,9 @@ int main(int argc, char *argv[]) {
 	int result[scatter_rounds][3];
 	for (int i = 0; i < scatter_rounds; i++) {
 		if (positions[i][0] < 0 && positions[i][1] < 0) {
+			result[i][0] = -1;
+			result[i][1] = -1;
+			result[i][2] = -1;
 			continue;
 		}
 		linked_list * component = create_list(-1, -1);
@@ -161,8 +164,7 @@ int main(int argc, char *argv[]) {
 		component = bfs_explore(positions[i][0], positions[i][1], component,
 								matrix, row, col);
 
-		int * witness = NULL;
-		get_top_left_list(component, witness);
+		int * witness = get_top_left_list(component);
 		result[i][0] = witness[0];
 		result[i][1] = witness[1];
 		free(witness);
@@ -180,7 +182,7 @@ int main(int argc, char *argv[]) {
 		free(pot_positions_array);
 		linked_list * printed = create_list(-1, -1);
 
-		printf("*** RESULTS ***\n\n");
+		printf("\n*** RESULTS ***\n\n");
 		for (int i = 0; i < scatter_rounds; i++) {
 			for (int j = 0; j < size; j++) {
 				/* make sure not to print anything multiple times */
@@ -191,7 +193,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		printf("\nTotal number of components: %d", get_len_list(printed) - 1);
+		printf("\nTotal number of components: %d\n", get_len_list(printed) - 1);
 
 		free_list(printed);
 	}
