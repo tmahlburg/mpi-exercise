@@ -136,7 +136,6 @@ int main(int argc, char *argv[]) {
 			curr = curr->next;
 		}
 		free_list(potential_positions);
-		free(curr);
 		for (int i = (len * 2); i < ((len + (len % size)) * 2); i++) {
 			pot_positions_array[i] = -1;
 		}
