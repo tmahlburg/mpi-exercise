@@ -66,11 +66,11 @@ void get_top_left_list(linked_list * head, int * result) {
 }
 
 void free_list(linked_list * head) {
-	while (head->next != NULL) {
-		linked_list * temp = head;
+	linked_list * tmp;
+	while (head != NULL) {
+		tmp = head;
 		head = head->next;
 		free(temp);
 	}
-	free(head);
 }
 
