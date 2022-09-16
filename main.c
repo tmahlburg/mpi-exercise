@@ -87,8 +87,8 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Get_processor_name(processor_name, &namelen);
 
-	int row = 10;
-	int col = 20;
+	int row = 5;
+	int col = 10;
 	int * matrix = allocate_matrix(row, col);
 
 	root = 0;
@@ -101,8 +101,6 @@ int main(int argc, char *argv[]) {
 
 	/* broadcast matrix */
 	MPI_Bcast(matrix, row * col, MPI_INT, root, MPI_COMM_WORLD);
-
-	printf("broadcast matrix");
 
 	int * pot_positions_array;
 	int scatter_rounds;
@@ -125,38 +123,32 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		int len = get_len_list(potential_positions);
-		scatter_rounds = ceil(len / size);
+		scatter_rounds = ceil(len * 1.0 / size);
 
-		pot_positions_array = malloc(sizeof(int) * (len + (len % size)) * 2);
+		pot_positions_array = malloc(sizeof(int) * scatter_rounds * size * 2);
 		linked_list * curr = potential_positions;
 		/* prepare array */
-		for (int i = 0; curr->next != NULL; i = i + 2) {
+		for (int i = 0; curr != NULL; i = i + 2) {
 			pot_positions_array[i] = curr->x;
 			pot_positions_array[i + 1] = curr->y;
 			curr = curr->next;
 		}
 		free_list(potential_positions);
-		for (int i = (len * 2); i < ((len + (len % size)) * 2); i++) {
+		for (int i = (len * 2); i < (scatter_rounds * size * 2); i++) {
 			pot_positions_array[i] = -1;
 		}
 	}
 
-	printf("found starting positions");
-
 	/* broadcast number of scatters */
 	MPI_Bcast(&scatter_rounds, 1, MPI_INT, root, MPI_COMM_WORLD);
-
-	printf("broadcast starting positions");
 
 	int positions[scatter_rounds][2];
 	int j = 0;
 	/* scatter potential starting position */
-	for (int i = 0; i < scatter_rounds; i = i + size) {
-		MPI_Scatter(&pot_positions_array[i * 2], 2, MPI_INT, &positions[j], 2, MPI_INT, root, MPI_COMM_WORLD);
+	for (int i = 0; i < scatter_rounds; i++) {
+		MPI_Scatter(&pot_positions_array[i * size * 2], 2, MPI_INT, &positions[j], 2, MPI_INT, root, MPI_COMM_WORLD);
 		j++;
 	}
-
-	printf("scattered starting positions");
 
 	/* {witness x, witness y, size} */
 	int result[scatter_rounds][3];
@@ -183,8 +175,6 @@ int main(int argc, char *argv[]) {
 	for (int i = 0; i < scatter_rounds; i++) {
 		MPI_Gather(&result[i], 3, MPI_INT, &results[i], 3, MPI_INT, root, MPI_COMM_WORLD);
 	}
-
-	printf("gathered results");
 
 	if (rank == root) {
 		free(pot_positions_array);
