@@ -134,6 +134,7 @@ int main(int argc, char *argv[]) {
 			curr = curr->next;
 		}
 		free_list(potential_positions);
+		free(curr);
 		for (int i = (len * 2); i < ((len + (len % size)) * 2); i++) {
 			pot_positions_array[i] = -1;
 		}
@@ -154,6 +155,9 @@ int main(int argc, char *argv[]) {
 	/* {witness x, witness y, size} */
 	int result[scatter_rounds][3];
 	for (int i = 0; i < scatter_rounds; i++) {
+		if (positions[i][0] < 0 && positions[i][1] < 0) {
+			continue;
+		}
 		linked_list * component = create_list(-1, -1);
 
 		component = bfs_explore(positions[i][0], positions[i][1], component,
@@ -174,15 +178,24 @@ int main(int argc, char *argv[]) {
 		MPI_Gather(&result[i], 3, MPI_INT, &results[i], 3, MPI_INT, root, MPI_COMM_WORLD);
 	}
 
-	/* root: process results
-	 *  -> doppelte ergebnisse löschen
-	 */
+	if (rank == root) {
+		linked_list * printed = create_list(-1, -1);
 
-	/* root: print results
-	 *  -> Anzahl Ergebnisse
-	 *  -> je Ergebnis: Zeugenpixel.x, Zeugenpixel.y, Anzahl zugehöriger Pixel
-	 */
+		printf("*** RESULTS ***\n\n");
+		for (int i = 0; i < scatter_rounds; i++) {
+			for (int j = 0; j < size; j++) {
+				/* make sure not to print anything multiple times */
+				if (!is_in_list(printed, results[i][j][0], results[i][j][1])) {
+					add_to_list(printed, results[i][j][0], results[i][j][1]);
+					printf("Witness: (%d, %d) Size: %d\n", results[i][j][0], results[i][j][1], results[i][j][2]);
+				}
+			}
+		}
 
+		printf("\nTotal number of components: %d", get_len_list(printed) - 1);
+
+		free_list(printed);
+	}
 	free(matrix);
 
 	MPI_Finalize();
