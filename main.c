@@ -55,7 +55,7 @@ void print_matrix(int *const matrix, int row, int col)
 }
 
 linked_list *bfs_explore(int x, int y, linked_list * explored,
-			 int *matrix, int row, int col)
+						 int *matrix, int row, int col)
 {
 	if (is_in_list(explored, x, y)) {
 		return explored;
@@ -66,8 +66,7 @@ linked_list *bfs_explore(int x, int y, linked_list * explored,
 	 * TOP LEFT
 	 */
 	if (x > 0 && y > 0 && (matrix[(col * (y - 1)) + (x - 1)])) {
-		explored =
-		    bfs_explore(x - 1, y - 1, explored, matrix, row, col);
+		explored = bfs_explore(x - 1, y - 1, explored, matrix, row, col);
 	}
 	/*
 	 * TOP CENTRE
@@ -79,8 +78,7 @@ linked_list *bfs_explore(int x, int y, linked_list * explored,
 	 * TOP RIGHT
 	 */
 	if (x < (col - 1) && y > 0 && (matrix[(col * (y - 1)) + (x + 1)])) {
-		explored =
-		    bfs_explore(x + 1, y - 1, explored, matrix, row, col);
+		explored = bfs_explore(x + 1, y - 1, explored, matrix, row, col);
 	}
 	/*
 	 * LEFT CENTRE
@@ -98,8 +96,7 @@ linked_list *bfs_explore(int x, int y, linked_list * explored,
 	 * BOTTOM LEFT
 	 */
 	if (x > 0 && y < (row - 1) && (matrix[(col * (y + 1)) + (x - 1)])) {
-		explored =
-		    bfs_explore(x - 1, y + 1, explored, matrix, row, col);
+		explored = bfs_explore(x - 1, y + 1, explored, matrix, row, col);
 	}
 	/*
 	 * BOTTOM CENTRE
@@ -111,9 +108,8 @@ linked_list *bfs_explore(int x, int y, linked_list * explored,
 	 * BOTTOM RIGHT
 	 */
 	if (x < (col - 1) && y < (row - 1)
-	    && (matrix[(col * (y + 1)) + (x + 1)])) {
-		explored =
-		    bfs_explore(x + 1, y + 1, explored, matrix, row, col);
+		&& (matrix[(col * (y + 1)) + (x + 1)])) {
+		explored = bfs_explore(x + 1, y + 1, explored, matrix, row, col);
 	}
 
 	return explored;
@@ -178,15 +174,12 @@ int main(int argc, char *argv[])
 		for (int i = 0; i < row; i++) {
 			int last_cell = 0;
 			for (int j = 0; j < col; j++) {
-				if (matrix[(col * i) + j] == 1
-				    && last_cell != 1) {
+				if (matrix[(col * i) + j] == 1 && last_cell != 1) {
 					if (is_first) {
-						potential_positions =
-						    create_list(j, i);
+						potential_positions = create_list(j, i);
 						is_first = 0;
 					} else {
-						add_to_list(potential_positions,
-							    j, i);
+						add_to_list(potential_positions, j, i);
 					}
 				}
 				last_cell = matrix[(col * i) + j];
@@ -195,8 +188,7 @@ int main(int argc, char *argv[])
 		int len = get_len_list(potential_positions);
 		scatter_rounds = ceil(len * 1.0 / size);
 
-		pot_positions_array =
-		    malloc(sizeof(int) * scatter_rounds * size * 2);
+		pot_positions_array = malloc(sizeof(int) * scatter_rounds * size * 2);
 		if (!pot_positions_array) {
 			perror("malloc failed to allocate pot_positions_array");
 			exit(EXIT_FAILURE);
@@ -228,7 +220,7 @@ int main(int argc, char *argv[])
 	 */
 	for (int i = 0; i < scatter_rounds; i++) {
 		MPI_Scatter(&pot_positions_array[i * size * 2], 2, MPI_INT,
-			    &positions[j], 2, MPI_INT, root, MPI_COMM_WORLD);
+					&positions[j], 2, MPI_INT, root, MPI_COMM_WORLD);
 		j++;
 	}
 
@@ -246,8 +238,8 @@ int main(int argc, char *argv[])
 		linked_list *component = create_list(-1, -1);
 
 		component =
-		    bfs_explore(positions[i][0], positions[i][1], component,
-				matrix, row, col);
+			bfs_explore(positions[i][0], positions[i][1], component,
+						matrix, row, col);
 
 		int *witness = get_top_left_list(component);
 		result[i][0] = witness[0];
@@ -263,7 +255,7 @@ int main(int argc, char *argv[])
 	int results[scatter_rounds][size][3];
 	for (int i = 0; i < scatter_rounds; i++) {
 		MPI_Gather(&result[i], 3, MPI_INT, &results[i], 3, MPI_INT,
-			   root, MPI_COMM_WORLD);
+				   root, MPI_COMM_WORLD);
 	}
 
 	if (rank == root) {
@@ -276,21 +268,15 @@ int main(int argc, char *argv[])
 				/*
 				 * make sure not to print anything multiple times
 				 */
-				if (!is_in_list
-				    (printed, results[i][j][0],
-				     results[i][j][1])) {
-					add_to_list(printed, results[i][j][0],
-						    results[i][j][1]);
-					printf("Witness: (%d, %d) Size: %d\n",
-					       results[i][j][0],
-					       results[i][j][1],
-					       results[i][j][2]);
+				if (!is_in_list(printed, results[i][j][0], results[i][j][1])) {
+					add_to_list(printed, results[i][j][0], results[i][j][1]);
+					printf("Witness: (%d, %d) Size: %d\n", results[i][j][0],
+						   results[i][j][1], results[i][j][2]);
 				}
 			}
 		}
 
-		printf("\nTotal number of components: %d\n",
-		       get_len_list(printed) - 1);
+		printf("\nTotal number of components: %d\n", get_len_list(printed) - 1);
 
 		free_list(printed);
 	}

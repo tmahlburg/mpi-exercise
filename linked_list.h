@@ -15,4 +15,4 @@ extern int *get_top_left_list(linked_list * head);
 extern void print_list(linked_list * head);
 extern void free_list(linked_list * head);
 
-#endif				/* LINKED_LIST_H */
+#endif							/* LINKED_LIST_H */
