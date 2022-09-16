@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "linked_list.h"
 
@@ -33,7 +34,7 @@ void add_to_list(linked_list * head, int x, int y) {
 
 int is_in_list(linked_list * head, int x, int y) {
 	linked_list * curr = head;
-	while (curr->next != NULL) {
+	while (curr != NULL) {
 		if (curr->x == x && curr->y == y) {
 			return 1;
 		}
@@ -42,12 +43,12 @@ int is_in_list(linked_list * head, int x, int y) {
 	return 0;
 }
 
-void get_top_left_list(linked_list * head, int * result) {
+int * get_top_left_list(linked_list * head) {
 	int x = -1;
 	int y = -1;
 
 	linked_list * curr = head;
-	while (curr->next != NULL) {
+	while (curr != NULL) {
 		if (x < 0 && y < 0) {
 			x = curr->x;
 			y = curr->y;
@@ -59,10 +60,21 @@ void get_top_left_list(linked_list * head, int * result) {
 				y = curr->y;
 			}
 		}
+		curr = curr->next;
 	}
-	result = malloc(sizeof(int) * 2);
+	int * result = malloc(sizeof(int) * 2);
 	result[0] = x;
 	result[1] = y;
+
+	return result;
+}
+
+void print_list(linked_list * head) {
+	linked_list * curr = head;
+	while (curr != NULL) {
+		printf("x: %d, y: %d\n", curr->x, curr->y);
+		curr = curr->next;
+	}
 }
 
 void free_list(linked_list * head) {
