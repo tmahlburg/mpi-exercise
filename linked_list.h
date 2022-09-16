@@ -2,9 +2,9 @@
 #define LINKED_LIST_H
 
 typedef struct linked_list {
-    int x;
-    int y;
-    struct linked_list *next;
+	int x;
+	int y;
+	struct linked_list *next;
 } linked_list;
 
 extern linked_list *create_list(int x, int y);
