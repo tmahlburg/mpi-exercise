@@ -14,7 +14,7 @@ linked_list * create_list(int x, int y) {
 int get_len_list(linked_list * head) {
 	int len;
 	linked_list * curr = head;
-	for (len = 0; curr->next != NULL; len++) {
+	for (len = 1; curr->next != NULL; len++) {
 		curr = curr->next;
 	}
 	return len;
