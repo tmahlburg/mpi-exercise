@@ -31,6 +31,11 @@ int *read_matrix(char *file_name, int *row, int *col)
 {
 	FILE *file = fopen(file_name, "r");
 
+	if (!file) {
+		perror("couldn't fopen in read_matrix");
+		exit(EXIT_FAILURE);
+	}
+
 	fscanf(file, "%d\n%d\n", row, col);
 
 	int *matrix = allocate_matrix(*row, *col);
