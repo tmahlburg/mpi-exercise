@@ -16,17 +16,6 @@ int *allocate_matrix(int row, int col)
 	return matrix;
 }
 
-void generate_matrix(int *matrix, int row, int col)
-{
-	srand(time(NULL));
-
-	for (int i = 0; i < row; i++) {
-		for (int j = 0; j < col; j++) {
-			matrix[(col * i) + j] = rand() % 2;
-		}
-	}
-}
-
 int *read_matrix(char *file_name, int *row, int *col)
 {
 	FILE *file = fopen(file_name, "r");
@@ -132,7 +121,7 @@ linked_list *bfs_explore(int x, int y, linked_list * explored,
 
 int main(int argc, char *argv[])
 {
-	char * file_name;
+	char *file_name;
 	if (argc > 1) {
 		file_name = argv[1];
 	} else {
