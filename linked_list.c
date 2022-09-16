@@ -70,7 +70,7 @@ void free_list(linked_list * head) {
 	while (head != NULL) {
 		tmp = head;
 		head = head->next;
-		free(temp);
+		free(tmp);
 	}
 }
 
