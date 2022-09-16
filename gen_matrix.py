@@ -35,8 +35,8 @@ def matrix_to_file(matrix: List[List[str]], name: str):
         f.write(str(len(matrix[0])))
         f.write('\n')
         for line in matrix:
-            f.writelines('\n'.join(line))
-            f.write('\n')
+            f.writelines(line)
+        f.write('\n')
 
 
 def print_matrix(matrix: List[List[str]]):
