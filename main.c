@@ -22,23 +22,23 @@ void generate_matrix(int *matrix, int row, int col)
 
 	for (int i = 0; i < row; i++) {
 		for (int j = 0; j < col; j++) {
-			matrix[i + (row * j)] = rand() % 2;
+			matrix[(col * i) + j] = rand() % 2;
 		}
 	}
 }
 
 int *read_matrix(char *file_name, int *row, int *col)
 {
-	FILE *file = fopen(file_name, 'r');
+	FILE *file = fopen(file_name, "r");
 
 	fscanf(file, "%d\n%d\n", row, col);
 
 	int *matrix = allocate_matrix(*row, *col);
 
-	for (int i = 0; i < row * col; i++) {
+	for (int i = 0; i < *row * *col; i++) {
 		char c = fgetc(file);
 		if (c == '1' || c == '0') {
-			matrix[i] = c;
+			matrix[i] = c - '0';
 		} else {
 			perror("unexpected character in matrix file");
 			exit(EXIT_FAILURE);
@@ -54,7 +54,7 @@ void print_matrix(int *const matrix, int row, int col)
 {
 	for (int i = 0; i < row; i++) {
 		for (int j = 0; j < col; j++) {
-			printf("%c ", matrix[i + (row * j)] ? 'O' : '.');
+			printf("%d ", matrix[(col * i) + j]);
 		}
 		putchar('\n');
 	}
@@ -71,53 +71,53 @@ linked_list *bfs_explore(int x, int y, linked_list * explored,
 	/*
 	 * TOP LEFT
 	 */
-	if (x > 0 && y > 0 && (matrix[(y - 1) + (row * (x - 1))])) {
+	if (x > 0 && y > 0 && (matrix[(col * (y - 1)) + (x - 1)])) {
 		explored =
 		    bfs_explore(x - 1, y - 1, explored, matrix, row, col);
 	}
 	/*
 	 * TOP CENTRE
 	 */
-	if (y > 0 && (matrix[(y - 1) + (row * (x))])) {
+	if (y > 0 && (matrix[(col * (y - 1)) + x])) {
 		explored = bfs_explore(x, y - 1, explored, matrix, row, col);
 	}
 	/*
 	 * TOP RIGHT
 	 */
-	if (x < (col - 1) && y > 0 && (matrix[(y - 1) + (row * (x + 1))])) {
+	if (x < (col - 1) && y > 0 && (matrix[(col * (y - 1)) + (x + 1)])) {
 		explored =
 		    bfs_explore(x + 1, y - 1, explored, matrix, row, col);
 	}
 	/*
 	 * LEFT CENTRE
 	 */
-	if (x > 0 && (matrix[y + (row * (x - 1))])) {
+	if (x > 0 && (matrix[(col * y) + (x - 1)])) {
 		explored = bfs_explore(x - 1, y, explored, matrix, row, col);
 	}
 	/*
 	 * RIGHT CENTRE
 	 */
-	if (x < (col - 1) && (matrix[y + (row * (x + 1))])) {
+	if (x < (col - 1) && (matrix[(col * y) + (x + 1)])) {
 		explored = bfs_explore(x + 1, y, explored, matrix, row, col);
 	}
 	/*
 	 * BOTTOM LEFT
 	 */
-	if (x > 0 && y < (row - 1) && (matrix[(y + 1) + (row * (x - 1))])) {
+	if (x > 0 && y < (row - 1) && (matrix[(col * (y + 1)) + (x - 1)])) {
 		explored =
 		    bfs_explore(x - 1, y + 1, explored, matrix, row, col);
 	}
 	/*
 	 * BOTTOM CENTRE
 	 */
-	if (y < (row - 1) && (matrix[(y + 1) + (row * x)])) {
+	if (y < (row - 1) && (matrix[(col * (y + 1)) + x])) {
 		explored = bfs_explore(x, y + 1, explored, matrix, row, col);
 	}
 	/*
 	 * BOTTOM RIGHT
 	 */
 	if (x < (col - 1) && y < (row - 1)
-	    && (matrix[(y + 1) + (row * (x + 1))])) {
+	    && (matrix[(col * (y + 1)) + (x + 1)])) {
 		explored =
 		    bfs_explore(x + 1, y + 1, explored, matrix, row, col);
 	}
@@ -127,6 +127,13 @@ linked_list *bfs_explore(int x, int y, linked_list * explored,
 
 int main(int argc, char *argv[])
 {
+	char * file_name;
+	if (argc > 1) {
+		file_name = argv[1];
+	} else {
+		file_name = "matrix.txt";
+	}
+
 	/*
 	 * mpi init
 	 */
@@ -138,18 +145,27 @@ int main(int argc, char *argv[])
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Get_processor_name(processor_name, &namelen);
 
-	int row = 10;
-	int col = 10;
-	int *matrix = allocate_matrix(row, col);
+	int row, col;
 
+	int *matrix;
 	root = 0;
 
 	if (rank == root) {
 		/*
 		 * generate matrix
 		 */
-		generate_matrix(matrix, row, col);
+		matrix = read_matrix(file_name, &row, &col);
 		print_matrix(matrix, row, col);
+	}
+
+	/*
+	 * broadcat row and col
+	 */
+	MPI_Bcast(&row, 1, MPI_INT, root, MPI_COMM_WORLD);
+	MPI_Bcast(&col, 1, MPI_INT, root, MPI_COMM_WORLD);
+
+	if (rank != root) {
+		matrix = allocate_matrix(row, col);
 	}
 
 	/*
@@ -168,7 +184,7 @@ int main(int argc, char *argv[])
 		for (int i = 0; i < row; i++) {
 			int last_cell = 0;
 			for (int j = 0; j < col; j++) {
-				if (matrix[i + (row * j)] == 1
+				if (matrix[(col * i) + j] == 1
 				    && last_cell != 1) {
 					if (is_first) {
 						potential_positions =
@@ -179,7 +195,7 @@ int main(int argc, char *argv[])
 							    j, i);
 					}
 				}
-				last_cell = matrix[i + (row * j)];
+				last_cell = matrix[(col * i) + j];
 			}
 		}
 		int len = get_len_list(potential_positions);
