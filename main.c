@@ -5,54 +5,8 @@
 #include <mpi.h>
 
 #include "linked_list.h"
+#include "matrix.h"
 
-int *allocate_matrix(int row, int col)
-{
-	int *matrix = malloc(row * col * sizeof(int));
-	if (!matrix) {
-		perror("malloc failed on allocating matrix");
-		exit(EXIT_FAILURE);
-	}
-	return matrix;
-}
-
-int *read_matrix(char *file_name, int *row, int *col)
-{
-	FILE *file = fopen(file_name, "r");
-
-	if (!file) {
-		perror("couldn't fopen in read_matrix");
-		exit(EXIT_FAILURE);
-	}
-
-	fscanf(file, "%d\n%d\n", row, col);
-
-	int *matrix = allocate_matrix(*row, *col);
-
-	for (int i = 0; i < *row * *col; i++) {
-		char c = fgetc(file);
-		if (c == '1' || c == '0') {
-			matrix[i] = c - '0';
-		} else {
-			perror("unexpected character in matrix file");
-			exit(EXIT_FAILURE);
-		}
-	}
-
-	fclose(file);
-
-	return matrix;
-}
-
-void print_matrix(int *const matrix, int row, int col)
-{
-	for (int i = 0; i < row; i++) {
-		for (int j = 0; j < col; j++) {
-			printf("%d ", matrix[(col * i) + j]);
-		}
-		putchar('\n');
-	}
-}
 
 linked_list *bfs_explore(int x, int y, linked_list * explored,
 						 int *matrix, int row, int col)
