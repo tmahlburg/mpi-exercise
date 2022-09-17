@@ -7,7 +7,6 @@
 #include "linked_list.h"
 #include "matrix.h"
 
-
 linked_list *bfs_explore(int x, int y, linked_list * explored,
 						 int *matrix, int row, int col)
 {
@@ -71,30 +70,31 @@ linked_list *bfs_explore(int x, int y, linked_list * explored,
 
 int main(int argc, char *argv[])
 {
-	char *file_name;
-	if (argc > 1) {
-		file_name = argv[1];
-	} else {
-		file_name = "matrix.txt";
-	}
 
 	/*
 	 * mpi init
 	 */
-	int size, rank, namelen, root;
-	char processor_name[MPI_MAX_PROCESSOR_NAME];
+	int size, rank, root;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	MPI_Get_processor_name(processor_name, &namelen);
+
+	int root = 0;
 
 	int row, col;
-
 	int *matrix;
-	root = 0;
 
 	if (rank == root) {
+		/*
+		 * handle arguments
+		 */
+		char *file_name;
+		if (argc > 1) {
+			file_name = argv[1];
+		} else {
+			file_name = "matrix.txt";
+		}
 		/*
 		 * generate matrix
 		 */
