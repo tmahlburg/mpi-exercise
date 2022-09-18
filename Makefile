@@ -1,3 +1,5 @@
+NPROC := 0
+
 main: main.c matrix.c matrix.h linked_list.c linked_list.h
 	- mpicc -lm -o main main.c matrix.c matrix.h linked_list.c linked_list.h
 
@@ -9,4 +11,4 @@ test_data: matrix.txt
 build: main
 
 run: main myhosts
-	- mpirun -hostfile myhosts main
+	- mpirun -np $(NPROC) -hosts myhosts main
