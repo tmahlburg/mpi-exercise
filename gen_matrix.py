@@ -3,14 +3,18 @@
 import random
 from typing import List
 
+# import sys
+# sys.setrecursionlimit(2000)
 
-row = 100
-col = 100
+row = 80
+col = 40
 # probability a field is 1 and not 0
-probability = 0.3
-# file name to write the generated matrix to
+probability = 0.4
+# file name write the generated matrix to
 # used to import the matrix into the mpi program
 file_name = 'matrix.txt'
+# don't print components and generated matrix
+quiet = False
 
 
 def gen_matrix(row: int, col: int, probability: float) -> List[List[str]]:
@@ -103,9 +107,11 @@ def find_components(matrix: List[List[str]]) -> List[List[List[int]]]:
 
 matrix = gen_matrix(row, col, probability)
 matrix_to_file(matrix, file_name)
-print_matrix(matrix)
-components = find_components(matrix)
-print('Components:')
-for component in components:
-    print(component, 'Size:', len(component))
-print('Components counted:', len(components))
+
+if not quiet:
+    print_matrix(matrix)
+    components = find_components(matrix)
+    print('Components:')
+    for component in components:
+        print(component, 'Size:', len(component))
+    print('Components counted:', len(components))
